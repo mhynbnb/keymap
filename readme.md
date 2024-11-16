@@ -2,7 +2,8 @@
 
 一个简单的脚本，实现手柄到键盘的映射。
 
-![image-20241116211951703](C:\Users\MHY\AppData\Roaming\Typora\typora-user-images\image-20241116211951703.png)
+![image](https://github.com/user-attachments/assets/bd9ca788-7f13-4d33-8fd2-5697d34c5dfd)
+
 
 ### 运行
 
