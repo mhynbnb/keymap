@@ -9,6 +9,7 @@ Version :
 import json
 import sys
 import threading
+import time
 
 import keyboard
 from PyQt5.QtCore import QTimer, QRegExp
@@ -64,6 +65,8 @@ class MyWindow(QMainWindow, Ui_MainWindow):
         '''开始映射定时器'''
         self.timer_map=QTimer(self)
         self.timer_map.timeout.connect(self.map)
+        self.timer_map_constant=QTimer(self)
+        self.timer_map_constant.timeout.connect(self.map_constant)
         '''检测鼠标是否点击单元格'''
         self.tableWidget.cellClicked.connect(self.on_cell_entered)
         '''禁用QTableWidget键盘快捷键'''
@@ -189,13 +192,19 @@ class MyWindow(QMainWindow, Ui_MainWindow):
                     self.key_map[key] = value
 
             print(self.key_map)
-            self.timer_map.start(1)
+            if self.radioButton.isChecked():
+                self.timer_map.stop()
+                self.timer_map_constant.start(1)
+            else:
+                self.timer_map_constant.stop()
+                self.timer_map.start(1)
             self.pushButton.setText('停止映射')
             self.START_MAP=True
         else:
             self.timer.start(100)
             self.timer2.start(100)
             self.timer_map.stop()
+            self.timer_map_constant.stop()
             self.pushButton.setText('开始映射')
             self.START_MAP=False
 
@@ -210,12 +219,38 @@ class MyWindow(QMainWindow, Ui_MainWindow):
             elif event.type == pygame.JOYHATMOTION:
                 x, y = event.value
                 if key_list[(x,y)] in self.key_map:
+                    if self.last_key!=self.key_map[key_list[(x,y)]]:
+                        keyboard.release(self.last_key)
+                        print(self.last_key,'release')
                     print(key_list[(x,y)],self.key_map[key_list[(x,y)]])
                     self.last_key=self.key_map[key_list[(x,y)]]
                     keyboard.press(self.key_map[key_list[(x,y)]])
                 if x == 0 and y == 0:
                     print('stop')
                     keyboard.release(self.last_key)
+    def map_constant(self):
+        for event in pygame.event.get():
+            if event.type == pygame.JOYBUTTONDOWN:
+                while True:
+                    if key_list[event.button] in self.key_map:
+                        print(key_list[event.button],self.key_map[key_list[event.button]])
+                        keyboard.press(self.key_map[key_list[event.button]])
+                        keyboard.release(self.key_map[key_list[event.button]])
+                    if pygame.JOYBUTTONUP in [_.type for _ in pygame.event.get()]:
+                        break
+                    time.sleep(1/int(self.spinBox.text()))
+            elif event.type == pygame.JOYHATMOTION:
+                x, y = event.value
+                while True:
+                    if key_list[(x,y)] in self.key_map:
+                        print(key_list[(x,y)],self.key_map[key_list[(x,y)]])
+                        keyboard.press(self.key_map[key_list[(x,y)]])
+                        self.last_key=self.key_map[key_list[(x,y)]]
+                        keyboard.release(self.key_map[key_list[(x,y)]])
+                    if (0,0) in [_.value for _ in pygame.event.get()]:
+                        break
+                    time.sleep(1/int(self.spinBox.text()))
+
     def constant_click(self):
         '''连续点击'''
         if self.radioButton.isChecked():
